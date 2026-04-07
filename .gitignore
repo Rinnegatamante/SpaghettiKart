@@ -132,3 +132,4 @@ build*/
 _packages/
 out/
 
+compile_commands.json
