@@ -63,16 +63,23 @@
 
 // Align to 8-byte boundary for DMA requirements
 #ifdef __GNUC__
-#define ALIGNED8
+#define ALIGNED8 __attribute__((aligned(8)))
 #else
 #define ALIGNED8
 #endif
 
 // Align to 16-byte boundary for audio lib requirements
 #ifdef __GNUC__
-#define ALIGNED16
+#define ALIGNED16 __attribute__((aligned(16)))
 #else
 #define ALIGNED16
+#endif
+
+// Align to 4096-byte boundary for 64-bit page requirements
+#ifdef __GNUC__
+#define ALIGNED4096 __attribute__((aligned(4096)))
+#else
+#define ALIGNED4096
 #endif
 
 // Fixed point macros

@@ -178,6 +178,9 @@ else()
   set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG ${COMMON_CXX_FLAGS}")
 endif()
 
+# Toggle for GLES (Required for many ARM/Mobile platforms)
+option(USE_OPENGLES "Use OpenGLES instead of Desktop OpenGL" OFF)
+
 # Set game compilation version
 set(VERSION us)
 set(USE_NETWORKING OFF)
@@ -204,6 +207,7 @@ endif()
 # Add compile definitions for the target
 add_compile_definitions(
     VERSION_US=1
+    $<$<BOOL:${USE_OPENGLES}>:USE_OPENGLES>
     ENABLE_RUMBLE=1
     F3DEX_GBI=1
     _LANGUAGE_C
@@ -215,10 +219,6 @@ add_compile_definitions(
  SPAGHETTI_VERSION="${PROJECT_VERSION}"
 )
 
-# Find necessary libraries
-if (UNIX AND NOT APPLE)
-  find_package(OpenGL REQUIRED)
-endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
   configure_file( ${CMAKE_CURRENT_SOURCE_DIR}/properties.h.in ${CMAKE_CURRENT_SOURCE_DIR}/properties.h @ONLY)
@@ -334,6 +334,18 @@ else()
   add_executable(${PROJECT_NAME} ${ALL_FILES})
 endif()
 
+################################################################################
+# OpenGL / OpenGLES library
+################################################################################
+if (UNIX AND NOT APPLE)
+    if (USE_OPENGLES)
+        find_library(GLESv2_LIBRARY GLESv2 REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${GLESv2_LIBRARY})
+    else()
+        find_package(OpenGL REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL)
+    endif()
+endif()
 
 ################################################################################
 # MSVC runtime library
@@ -417,9 +429,12 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/libultraship/include
   ${CMAKE_CURRENT_SOURCE_DIR}/libultraship/include/libultraship
   ${SDL2_INCLUDE_DIRS}
-  ${GLEW_INCLUDE_DIRS}
   ${dr_libs_SOURCE_DIR}
 )
+
+if (NOT USE_OPENGLES)
+    include_directories(${GLEW_INCLUDE_DIRS})
+endif()
 
 add_subdirectory(libultraship ${CMAKE_CURRENT_SOURCE_DIR}/libultraship)
 add_dependencies(${PROJECT_NAME} libultraship)
@@ -531,8 +546,10 @@ option(USE_STANDALONE "Build as a standalone executable" OFF)
 option(BUILD_STORMLIB "Build with StormLib support" OFF)
 
 option(BUILD_SM64 "Build with Super Mario 64 support" OFF)
+option(BUILD_MK64 "Build with Mario Kart 64 support" ON)
 option(BUILD_SF64 "Build with Star Fox 64 support" OFF)
 option(BUILD_FZERO "Build with F-Zero X support" OFF)
+option(BUILD_MARIO_ARTIST "Build with Mario Artist support" OFF)
 
 add_subdirectory(torch)
 target_link_libraries(${PROJECT_NAME} PRIVATE torch "${ADDITIONAL_LIBRARY_DEPENDENCIES}")
