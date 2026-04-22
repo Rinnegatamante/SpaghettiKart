@@ -30239,6 +30239,8 @@ changes alone will change PulseAudio from one of the worst audio APIs to one of 
 */
 
 
+#define MA_NO_RUNTIME_LINKING
+
 /*
 It is assumed pulseaudio.h is available when linking at compile time. When linking at compile time, we use the declarations in the header
 to check for type safety. We cannot do this when linking at run time because the header might not be available.
