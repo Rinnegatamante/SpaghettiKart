@@ -38,6 +38,23 @@
 #include <locale.h>
 #endif
 
+#ifdef __vita__
+int _newlib_heap_size_user = 200 * 1024 * 1024;
+extern "C" void Editor_Launch(const char* resourceName) {
+}
+
+extern "C" void Editor_SetLevelDimensions(s16 minX, s16 maxX, s16 minZ, s16 maxZ, s16 minY, s16 maxY) {
+}
+
+extern "C" bool Editor_IsEnabled() {
+    return false;
+}
+
+extern "C" bool Editor_IsPaused() {
+    return false;
+}
+#endif
+
 extern "C" {
 #include "main.h"
 #include "audio/load.h"
