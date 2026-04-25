@@ -5,7 +5,7 @@ TITLE := SPAGHETTI
 TORCH_INCLUDES := Torch/src Torch/src/utils Torch/lib Torch Torch/src/factories \
 	Torch/lib/n64graphics Torch/lib/binarytools
 
-TORCH_SOURCES := Torch/src Torch/src/factories Torch/src/factories/sm64 Torch/lib/binarytools \
+TORCH_SOURCES := Torch/src Torch/src/factories Torch/src/factories/mk64 Torch/lib/binarytools \
 	Torch/src/n64 Torch/src/preprocess Torch/src/types Torch/src/utils Torch/lib/libmio0 \
 	Torch/src/archive Torch/lib/binarytools Torch/lib/libyay0 Torch/lib/n64graphics \
 	Torch/src/factories/naudio/v0 Torch/src/factories/naudio/v1
@@ -24,17 +24,20 @@ LUS_SOURCES := libultraship/src/fast libultraship/src/fast/resource/type libultr
 	libultraship/src/ship/controller/physicaldevice libultraship/src/ship/debug libultraship/src/ship/resource libultraship/src/ship/resource/archive \
 	libultraship/src/ship/utils/binarytools libultraship/src/ship/window/gui libultraship/src/ship/window/gui/resource libultraship/src/libultraship/window/gui \
 	libultraship/src/libultraship/log libultraship/src/libultraship/libultra libultraship/src/libultraship/controller/controldeck libultraship/src/libultraship/bridge \
-	libultraship/src/libultraship/controller/controldevice/controller libultraship/src/libultraship/controller/controldevice/controller/mapping libultraship/imgui
+	libultraship/src/libultraship/controller/controldevice/controller libultraship/src/libultraship/controller/controldevice/controller/mapping libultraship/imgui \
+	libultraship/src/ship/events
 
 GAME_INCLUDES := . include src src/buffers src/data src/debug src/ending src/racing src/audio src/port src/mods assets/code courses src/engine src/engine/tracks \
-	src/engine/actors src/engine/objects src/engine/sky src/engine/particles src/enhancements src/enhancements/freecam src/engine include/assets spdlog/include
+	src/engine/actors src/engine/objects src/engine/sky src/engine/particles src/enhancements src/enhancements/freecam src/engine include/assets spdlog/include \
+	toml/include
 
 GAME_SOURCES := src src/buffers src/data src/debug src/ending src/racing src/audio src/port src/mods assets/code courses src/engine src/engine/tracks \
 	src/engine/actors src/engine/objects src/engine/sky src/engine/particles src/enhancements src/enhancements/freecam src/engine src/port/interpolation \
-	src/port/audio courses/banshee_boardwalk courses/big_donut courses/block_fort courses/bowsers_castle courses/choco_mountain courses/ dks_jungle_parkway \
+	src/port/audio courses/banshee_boardwalk courses/big_donut courses/block_fort courses/bowsers_castle courses/choco_mountain courses/dks_jungle_parkway \
 	courses/double_deck courses/frappe_snowland courses/harbour courses/kalimari_desert courses/koopa_troopa_beach courses/luigi_raceway courses/mario_raceway \
 	courses/moo_moo_farm courses/rainbow_road courses/royal_raceway courses/sherbet_land courses/test_track courses/toads_turnpike courses/wario_stadium \
-	courses/yoshi_valley
+	courses/yoshi_valley src/engine/vehicles src/engine/cameras src/port/ui src/engine/editor src/port/resource/importers src/port/resource/type \
+	src/engine/mods src/engine/registry toml/src
 
 SOURCES := $(LUS_SOURCES) $(TORCH_SOURCES) $(GAME_SOURCES)
 
@@ -93,11 +96,11 @@ CXX = $(PREFIX)-g++
 
 CFLAGS = -g -Wl,-q,--allow-multiple-definition -O3 -ffast-math -fno-short-enums -fsigned-char \
 	$(foreach dir,$(INCLUDES),-I$(dir)) -fno-strict-aliasing -DMA_NO_RUNTIME_LINKING \
-	-Wno-narrowing -DIMGUI_IMPL_OPENGL_ES2 -DSPDLOG_ACTIVE_LEVEL=6 \
+	-Wno-narrowing -DIMGUI_IMPL_OPENGL_ES2 -DSPDLOG_ACTIVE_LEVEL=6 -DFMT_HEADER_ONLY \
 	-I$(VITASDK)/$(PREFIX)/include/SDL2 -DENABLE_OPENGL=1 -DNON_EQUIVALENT=1 \
 	-D_LANGUAGE_C -D_USE_MATH_DEFINES -DCIMGUI_DEFINE_ENUMS_AND_STRUCTS -DNAUDIO_SUPPORT \
 	-DAVOID_UB=1 -DF3DEX_GBI=1 -DNON_MATCHING=1 -DSPAGHETTI_VERSION="\"1.0\"" \
-	-DVERSION_US=1 -DENABLE_RUMBLE=1 -DIMGUI_DEFINE_MATH_OPERATORS -DSM64_SUPPORT \
+	-DVERSION_US=1 -DENABLE_RUMBLE=1 -DIMGUI_DEFINE_MATH_OPERATORS -DMK64_SUPPORT \
 	-DCVAR_PREFIX_RANDOMIZER_ENHANCEMENT=\"$(CVAR_PREFIX_RANDOMIZER_ENHANCEMENT)\" \
 	-DCVAR_PREFIX_RANDOMIZER_SETTING=\"$(CVAR_PREFIX_RANDOMIZER_SETTING)\" \
 	-DCVAR_PREFIX_COSMETIC=\"$(CVAR_PREFIX_COSMETIC)\" \
