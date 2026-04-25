@@ -39,20 +39,8 @@
 #endif
 
 #ifdef __vita__
+#include <vitasdk.h>
 int _newlib_heap_size_user = 200 * 1024 * 1024;
-extern "C" void Editor_Launch(const char* resourceName) {
-}
-
-extern "C" void Editor_SetLevelDimensions(s16 minX, s16 maxX, s16 minZ, s16 maxZ, s16 minY, s16 maxY) {
-}
-
-extern "C" bool Editor_IsEnabled() {
-    return false;
-}
-
-extern "C" bool Editor_IsPaused() {
-    return false;
-}
 #endif
 
 extern "C" {
@@ -960,6 +948,12 @@ void CM_ThrowRuntimeError(const char* fmt, ...) {
     exit(EXIT_FAILURE);
 }
 
+#ifdef __vita__
+extern "C" s8 *sMemoryPool;
+extern "C" uintptr_t sPoolEnd;
+extern "C" void *vita_main(void *argv);
+#endif
+
 #ifdef _WIN32
 int SDL_main(int argc, char** argv) {
 #else
@@ -968,6 +962,25 @@ extern "C"
 #endif
     int
     main(int argc, char* argv[]) {
+#endif
+#ifdef __vita__
+	//sceSysmoduleLoadModule(SCE_SYSMODULE_RAZOR_CAPTURE);
+    scePowerSetArmClockFrequency(444);
+    scePowerSetBusClockFrequency(222);
+    scePowerSetGpuClockFrequency(222);
+    scePowerSetGpuXbarClockFrequency(166);
+    sceIoMkdir("ux0:data/spaghetti/shader_cache", 0777);
+    
+    sceClibPrintf("Starting main thread...\n");
+    pthread_t t;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 2 * 1024 * 1024);
+    pthread_create(&t, &attr, vita_main, NULL);
+    return sceKernelExitDeleteThread(0);
+}
+
+extern "C" void *vita_main(void *argv) {
 #endif
 #ifdef _WIN32
     // Allow non-ascii characters for Windows

@@ -25,8 +25,8 @@
 s32 sGfxSeekPosition;
 s32 sPackedSeekPosition;
 
-static u8 sMemoryPool[0xFFFFFFF]; // Stock memory pool size: 0xAB630
-uintptr_t sPoolEnd = sMemoryPool + sizeof(sMemoryPool);
+s8 *sMemoryPool;
+uintptr_t sPoolEnd;
 
 uintptr_t sPoolFreeSpace;
 struct MainPoolBlock* sPoolListHeadL;
@@ -40,8 +40,8 @@ s32 memoryPadding[2];
 
 #define PRINT_MEMPOOL                                                                                                       \
     printf("\nPool Start: %p, Pool End: %p, size: 0x%lX\ngNextFreeMemoryAddress: 0x%lX\n\n", (void*) sMemoryPool,   \
-           (void*) (sMemoryPool + sizeof(sMemoryPool)),                                                                      \
-           (unsigned long) (((sMemoryPool + sizeof(sMemoryPool)) - sMemoryPool)),                                           \
+           (void*)sPoolEnd,                                                                      \
+           (unsigned long) (sPoolEnd - (uintptr_t)sMemoryPool),                                           \
            (unsigned long) gNextFreeMemoryAddress)
 
 /**
@@ -88,7 +88,9 @@ static uintptr_t get_texture2(size_t offset, const course_texture* textures) {
  * Default memory size, 701.984 Kilobytes.
  */
 void initialize_memory_pool() {
-
+	sMemoryPool = memalign(4096, 2 * 1024 * 1024);
+	sPoolEnd = sMemoryPool + 2 * 1024 * 1024;
+	
     uintptr_t poolStart = sMemoryPool;
     // uintptr_t sPoolEnd = sMemoryPool + sizeof(sMemoryPool);
 
