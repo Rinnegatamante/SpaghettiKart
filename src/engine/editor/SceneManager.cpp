@@ -36,6 +36,7 @@ extern "C" {
 
 namespace TrackEditor {
     void SaveLevel(Track* track, const TrackInfo* info) {
+#ifndef __vita__
         nlohmann::json data;
 
         /**
@@ -76,7 +77,6 @@ namespace TrackEditor {
             SPDLOG_INFO("[SceneManager] [SaveLevel] Track archive nullptr");
             return;
         }
-
         /**
          * Write data to file
          */
@@ -97,10 +97,12 @@ namespace TrackEditor {
         } catch (const nlohmann::json::exception& e) {
             SPDLOG_INFO("[SceneManager] [SaveLevel] JSON error during dump: {}", e.what());
         }
+#endif
     }
 
     /** Do not use GetWorld()->CurrentCourse during loading! The current track is not guaranteed! **/
     void LoadTrackDataFromJson(Track* track, const std::string& trackPath) {
+#ifndef __vita__
         SPDLOG_INFO("[SceneManager] [LoadTrackDataFromJson] Loading Track SceneFile...");
 
         if (trackPath.empty()) {
@@ -146,9 +148,11 @@ namespace TrackEditor {
         LoadStaticMeshActors(track, data);
         LoadTour(track, data);
         SPDLOG_INFO("[SceneManager] [LoadTrackDataFromJson] SceneFile Loaded!\n");
+#endif
     }
 
     void LoadTrackInfo(TrackInfo& info, std::shared_ptr<Ship::Archive> archive, std::string sceneFile) {
+#ifndef __vita__
         if (nullptr == archive) {
             SPDLOG_INFO("[SceneManager] [LoadTrackDataFromJson] Failed to load scenefile, track or rootarchive were null");
             return;
@@ -180,6 +184,7 @@ namespace TrackEditor {
         LoadTrackInfoData(info, data);
 
         SPDLOG_INFO("[SceneManager] [LoadTrackInfo] Loaded TrackInfo!\n");
+#endif
     }
 
     void Load_AddStaticMeshActor(const nlohmann::json& actorJson) {
