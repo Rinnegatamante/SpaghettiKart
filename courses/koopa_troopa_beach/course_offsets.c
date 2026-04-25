@@ -2,6 +2,7 @@
 #include "course_offsets.h"
 #include <assets/models/tracks/koopa_troopa_beach/koopa_troopa_beach_data.h>
 #include "animation.h"
+#include <stdint.h>
 
 Gfx* d_course_koopa_troopa_beach_dl_list1[] = {
     d_course_koopa_troopa_beach_dl_90,   d_course_koopa_troopa_beach_dl_278,  d_course_koopa_troopa_beach_dl_188,
@@ -222,64 +223,68 @@ Animation d_course_koopa_troopa_beach_unk_data4 = {
 
 //! 0x60169b
 uintptr_t d_course_koopa_troopa_beach_unk4[] = {
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_ADD_POS(0x00000000, 0x00000000, 0x00000000),
+    // ANIMATION_ADD_POS(0x00000000, 0x00000000, 0x00000000)
+    RENDER_MODEL_OR_ADD_POS, 0x00000006, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16630),
+    // ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16630)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_16630, 0x00000000, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_ADD_POS(0x00000000, -0x00000005, 0x00000005),
+    // ANIMATION_ADD_POS(0x00000000, -0x00000005, 0x00000005)
+    RENDER_MODEL_OR_ADD_POS, 0x00000006, 0x00000000, 0x00000000, (uintptr_t)-0x00000005, (uintptr_t)0x00000005,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16850),
+    // ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16850)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_16850, 0x00000000, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000),
+    // ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000),
+    // ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000,
 
-    ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
 
-    ANIMATION_POP_MATRIX,
+    // ANIMATION_ADD_POS(0x00000000, -0x00000005, -0x00000005)
+    RENDER_MODEL_OR_ADD_POS, 0x00000006, 0x00000000, 0x00000000, (uintptr_t)-0x00000005, (uintptr_t)-0x00000005,
 
-    ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_ADD_POS(0x00000000, -0x00000005, -0x00000005),
+    // ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16850)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_16850, 0x00000000, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL(d_course_koopa_troopa_beach_dl_16850),
+    // ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_DISABLE_AUTOMATIC_POP,
 
-    ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_168F0, 0x00000024, 0x00000000, 0x00000000),
+    // ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000)
+    RENDER_MODEL_OR_ADD_POS, 0x00000007, 0x00000000, (uintptr_t)d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000,
 
-    ANIMATION_DISABLE_AUTOMATIC_POP,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
+    (uintptr_t)ANIMATION_POP_MATRIX,
 
-    ANIMATION_RENDER_MODEL_AT(d_course_koopa_troopa_beach_dl_16990, 0x00000019, 0x00000000, 0x00000000),
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_POP_MATRIX,
-
-    ANIMATION_STOP,
+    (uintptr_t)ANIMATION_STOP,
 };
+
 
 // 0x06016B60
 Animation* d_course_koopa_troopa_beach_unk_data5[] = {
