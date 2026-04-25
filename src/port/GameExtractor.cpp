@@ -22,7 +22,7 @@
 #include <unistd.h>
 #endif
 
-#if !defined(__IOS__) && !defined(__ANDROID__) && !defined(__SWITCH__)
+#if !defined(__IOS__) && !defined(__ANDROID__) && !defined(__SWITCH__) && !defined(__vita__)
 #include "portable-file-dialogs.h"
 #endif
 
@@ -71,7 +71,7 @@ bool GameExtractor::SelectGameFromUI() {
         }
     }
 
-#if !defined(__IOS__) && !defined(__ANDROID__) && !defined(__SWITCH__)
+#if !defined(__IOS__) && !defined(__ANDROID__) && !defined(__SWITCH__) && !defined(__vita__)
     // Desktop: fallback to file dialogue if no baserom found
     if (!foundGame) {
         if (!pfd::settings::available()) {

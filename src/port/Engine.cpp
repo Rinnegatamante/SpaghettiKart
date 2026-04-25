@@ -178,7 +178,7 @@ GameEngine::GameEngine() {
 
     this->context->Init({assets_path}, {}, 3, { 26800, 512, 1100 }, wnd, controlDeck);
 
-#ifndef __SWITCH__
+#if !defined(__SWITCH__) && !defined(__vita__)
     Ship::Context::GetInstance()->GetLogger()->set_level(
         (spdlog::level::level_enum) CVarGetInteger("gDeveloperTools.LogLevel", 1));
     Ship::Context::GetInstance()->GetLogger()->set_pattern("[%H:%M:%S.%e] [%s:%#] [%l] %v");
@@ -308,7 +308,7 @@ extern "C" uint32_t GameEngine_GetInterpolationFrameCount() {
 }
 
 void GameEngine::ShowMessage(const char* title, const char* message, SDL_MessageBoxFlags type) {
-#if defined(__SWITCH__)
+#if defined(__SWITCH__) || defined(__vita__)
     SPDLOG_ERROR(message);
 #else
     SDL_ShowSimpleMessageBox(type, title, message, nullptr);
@@ -320,7 +320,7 @@ int GameEngine::ShowYesNoBox(const char* title, const char* box) {
     int ret;
 #ifdef _WIN32
     ret = MessageBoxA(nullptr, box, title, MB_YESNO | MB_ICONQUESTION);
-#elif defined(__SWITCH__)
+#elif defined(__SWITCH__) || defined(__vita__)
     SPDLOG_ERROR(box);
     return IDYES;
 #else

@@ -411,6 +411,9 @@ std::string Context::GetShortName() {
 }
 
 std::string Context::GetAppBundlePath() {
+#ifdef __vita__
+	return "ux0:data/spaghetti";
+#endif
 #if defined(__ANDROID__)
     const char* externaldir = SDL_AndroidGetExternalStoragePath();
     if (externaldir != NULL) {
@@ -474,6 +477,9 @@ std::string Context::GetAppBundlePath() {
 }
 
 std::string Context::GetAppDirectoryPath(std::string appName) {
+#ifdef __vita__
+	return "ux0:data/spaghetti";
+#endif
 #if defined(__ANDROID__)
     const char* externaldir = SDL_AndroidGetExternalStoragePath();
     if (externaldir != NULL) {

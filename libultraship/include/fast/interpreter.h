@@ -30,6 +30,10 @@
 #include <compare>
 #endif
 
+#ifdef __vita__
+#include <vitasdk.h>
+#endif
+
 /*enum {
     CC_0,
     CC_TEXEL0,
@@ -181,6 +185,16 @@ struct TextureCacheKey {
     uint8_t palette_index;
     uint32_t size_bytes;
 
+#ifdef __vita__
+    bool operator==(const TextureCacheKey& rhs) const {
+        return !sceClibMemcmp(&rhs, this, sizeof(TextureCacheKey));
+    };
+    struct Hasher {
+        size_t operator()(const TextureCacheKey& key) const noexcept {
+            return (size_t)key.texture_addr;
+        }
+    };
+#else
     bool operator==(const TextureCacheKey&) const noexcept = default;
 
     struct Hasher {
@@ -189,6 +203,7 @@ struct TextureCacheKey {
             return (size_t)(addr ^ (addr >> 5));
         }
     };
+#endif
 };
 
 typedef std::unordered_map<TextureCacheKey, struct TextureCacheValue, TextureCacheKey::Hasher> TextureCacheMap;
@@ -497,6 +512,9 @@ class Interpreter {
     unsigned int mMsaaLevel = 1;
     bool mDroppedFrame{};
     float* mBufVbo; // 3 vertices in a triangle and 32 floats per vtx
+#ifdef __vita__
+	float* mBufVboPtr;
+#endif
     size_t mBufVboLen{};
     size_t mBufVboNumTris{};
     GfxWindowBackend* mWapi = nullptr;

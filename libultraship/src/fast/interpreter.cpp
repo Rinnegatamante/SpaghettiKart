@@ -64,6 +64,29 @@ std::stack<std::string> currentDir;
 
 #define TEXTURE_CACHE_MAX_SIZE 1024
 
+#ifdef __vita__
+#include <vitasdk.h>
+typedef enum {
+    VGL_MODE_SHADER_PAIR,
+    VGL_MODE_GLOBAL,
+    VGL_MODE_POSTPONED
+} vglSemanticMode;
+typedef enum {
+    VGL_MEM_VRAM, // CDRAM
+    VGL_MEM_RAM, // USER_RW RAM
+    VGL_MEM_SLOW, // PHYCONT_USER_RW RAM
+    VGL_MEM_BUDGET, // CDLG RAM
+    VGL_MEM_EXTERNAL, // newlib mem
+    VGL_MEM_ALL
+} vglMemType;
+extern "C" {
+void *vglAlloc(uint32_t size, vglMemType type);
+void vglFree(void*);
+void vglSetParamBufferSize(uint32_t size);
+uint8_t vglInitWithCustomThreshold(int pool_size, int width, int height, int ram_threshold, int cdram_threshold, int phycont_threshold, int cdlg_threshold, SceGxmMultisampleMode msaa);
+};
+#endif
+
 namespace Fast {
 
 static UcodeHandlers ucode_handler_index = ucode_f3dex2;
@@ -109,13 +132,23 @@ constexpr size_t MAX_TRI_BUFFER = 256;
 Interpreter::Interpreter() {
     mRsp = new RSP();
     mRdp = new RDP();
+#ifdef __vita__
+    vglSetParamBufferSize(6 * 1024 * 1024);
+    vglInitWithCustomThreshold(0, 960, 544, 4 * 1024 * 1024, 0, 0, 0, SCE_GXM_MULTISAMPLE_4X);
+    mBufVbo = mBufVboPtr = (float *)vglAlloc(32 * 1024 * 1024, VGL_MEM_RAM);
+#else
     mBufVbo = new float[MAX_TRI_BUFFER * (32 * 3)];
+#endif
 }
 
 Interpreter::~Interpreter() {
     delete mRsp;
     delete mRdp;
+#ifdef __vita__
+	vglFree(mBufVboPtr);
+#else
     delete[] mBufVbo;
+#endif
 }
 
 static std::weak_ptr<Interpreter> mInstance;
@@ -125,8 +158,14 @@ void GfxSetInstance(std::shared_ptr<Interpreter> gfx) {
 }
 
 void Interpreter::Flush() {
-    if (mBufVboLen > 0) {
+    if (mBufVboNumTris > 0) {
         mRapi->DrawTriangles(mBufVbo, mBufVboLen, mBufVboNumTris);
+#ifdef __vita__
+        mBufVbo += mBufVboLen;
+		if (((uintptr_t)mBufVbo - (uintptr_t)mBufVboPtr) > (32 * 1024 * 1024 - (MAX_TRI_BUFFER * (32 * 3)) * sizeof(float))) {
+			mBufVbo = mBufVboPtr;
+		}
+#endif
         mBufVboLen = 0;
         mBufVboNumTris = 0;
     }
@@ -1293,11 +1332,22 @@ void Interpreter::ImportTextureMask(int i, int tile) {
     mRapi->UploadTexture(mTexUploadBuffer, width, height);
 }
 
+#ifdef __vita__
+extern "C" {
+    void normalize3_neon(float v[3], float d[3]);
+    void matmul4_neon(float m0[16], float m1[16], float d[16]);
+};
+#endif
+
 void Interpreter::NormalizeVector(float v[3]) {
+#ifdef __vita__
+	normalize3_neon(v, v);
+#else
     float s = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] /= s;
     v[1] /= s;
     v[2] /= s;
+#endif
 }
 
 void Interpreter::TransposedMatrixMul(float res[3], const float a[3], const float b[4][4]) {
@@ -1307,6 +1357,9 @@ void Interpreter::TransposedMatrixMul(float res[3], const float a[3], const floa
 }
 
 void Interpreter::MatrixMul(float res[4][4], const float a[4][4], const float b[4][4]) {
+#ifdef __vita__
+	matmul4_neon((float *)b, (float *)a, (float *)res);
+#else
     float tmp[4][4];
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
@@ -1314,6 +1367,7 @@ void Interpreter::MatrixMul(float res[4][4], const float a[4][4], const float b[
         }
     }
     memcpy(res, tmp, sizeof(tmp));
+#endif
 }
 
 void Interpreter::CalculateNormalDir(const F3DLight_t* light, float coeffs[3]) {
@@ -2071,10 +2125,14 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
         // mBufVbo[mBufVboLen++] = color->a / 255.0f;
     }
 
+#ifdef __vita__
+	mBufVboNumTris++;
+#else
     if (++mBufVboNumTris == MAX_TRI_BUFFER) {
         // if (++mBufVbo_num_tris == 1) {
         Flush();
     }
+#endif
 }
 
 void Interpreter::GfxSpGeometryMode(uint32_t clear, uint32_t set) {
