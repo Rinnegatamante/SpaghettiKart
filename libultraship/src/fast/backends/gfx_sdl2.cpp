@@ -647,25 +647,6 @@ void GfxWindowBackendSDL2::HandleSingleEvent(SDL_Event& event) {
 }
 
 void GfxWindowBackendSDL2::HandleEvents() {
-#ifdef __vita__
-    static uint32_t oldpad;
-    SceCtrlData pad;
-    sceCtrlPeekBufferPositive(0, &pad, 1);
-    #define IS_PRESSED(x) ((pad.buttons & x) && !(oldpad & x))
-    #define IS_RELEASED(x) ((oldpad & x) && !(pad.buttons & x))
-    #define fake_press(a, b, c) \
-        { SDL_Event sdlevent = {0}; \
-        sdlevent.type = a; \
-        sdlevent.key.keysym.scancode = b; \
-        sdlevent.key.keysym.sym = c; \
-        SDL_PushEvent(&sdlevent); }
-    if (IS_PRESSED(SCE_CTRL_SELECT)) {
-        fake_press(SDL_KEYDOWN, SDL_SCANCODE_ESCAPE, SDLK_ESCAPE);
-    } else if (IS_RELEASED(SCE_CTRL_SELECT)) {
-        fake_press(SDL_KEYUP, SDL_SCANCODE_ESCAPE, SDLK_ESCAPE);
-    }
-    oldpad = pad.buttons;
-#endif
     SDL_Event event;
     SDL_PumpEvents();
     while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_CONTROLLERDEVICEADDED - 1) > 0) {

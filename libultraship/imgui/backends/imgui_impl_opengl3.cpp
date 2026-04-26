@@ -742,6 +742,9 @@ void ImGui_ImplOpenGL3_DestroyFontsTexture()
 // If you get an error please report on github. You may try different GL context version or GLSL version. See GL<>GLSL version table at the top of this file.
 static bool CheckShader(GLuint handle, const char* desc)
 {
+#ifdef __vita__
+    return true;
+#else
     ImGui_ImplOpenGL3_Data* bd = ImGui_ImplOpenGL3_GetBackendData();
     GLint status = 0, log_length = 0;
     glGetShaderiv(handle, GL_COMPILE_STATUS, &status);
@@ -756,11 +759,15 @@ static bool CheckShader(GLuint handle, const char* desc)
         fprintf(stderr, "%s\n", buf.begin());
     }
     return (GLboolean)status == GL_TRUE;
+#endif
 }
 
 // If you get an error please report on GitHub. You may try different GL context version or GLSL version.
 static bool CheckProgram(GLuint handle, const char* desc)
 {
+#ifdef __vita__
+    return true;
+#else
     ImGui_ImplOpenGL3_Data* bd = ImGui_ImplOpenGL3_GetBackendData();
     GLint status = 0, log_length = 0;
     glGetProgramiv(handle, GL_LINK_STATUS, &status);
@@ -775,6 +782,7 @@ static bool CheckProgram(GLuint handle, const char* desc)
         fprintf(stderr, "%s\n", buf.begin());
     }
     return (GLboolean)status == GL_TRUE;
+#endif
 }
 
 bool    ImGui_ImplOpenGL3_CreateDeviceObjects()

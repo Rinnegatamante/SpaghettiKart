@@ -349,7 +349,7 @@ void GameEngine::Create() {
     instance->gHMAS = new HMAS();
     instance->AudioInit();
     GameUI::SetupGuiElements();
-#if defined(__SWITCH__) || defined(__WIIU__)
+#if defined(__SWITCH__) || defined(__WIIU__) || defined(__vita__)
     CVarRegisterInteger("gControlNav", 1); // always enable controller nav on switch/wii u
 #endif
 }
