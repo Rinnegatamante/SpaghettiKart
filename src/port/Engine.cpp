@@ -41,6 +41,8 @@
 #include <port/switch/SwitchImpl.h>
 #endif
 
+uint32_t interp_fps = 30;
+
 extern "C" {
 bool prevAltAssets = false;
 float gInterpolationStep = 0.0f;
@@ -287,16 +289,7 @@ bool GameEngine::GenAssetFile() {
 }
 
 uint32_t GameEngine::GetInterpolationFPS() {
-    if (CVarGetInteger("gMatchRefreshRate", 0)) {
-        return Ship::Context::GetInstance()->GetWindow()->GetCurrentRefreshRate();
-
-    } else if (CVarGetInteger("gVsyncEnabled", 1) ||
-               !Ship::Context::GetInstance()->GetWindow()->CanDisableVerticalSync()) {
-        return std::min<uint32_t>(Ship::Context::GetInstance()->GetWindow()->GetCurrentRefreshRate(),
-                                  CVarGetInteger("gInterpolationFPS", 30));
-    }
-
-    return CVarGetInteger("gInterpolationFPS", 30);
+    return interp_fps;
 }
 
 uint32_t GameEngine::GetInterpolationFrameCount() {
@@ -368,6 +361,7 @@ void GameEngine::Destroy() {
 bool ShouldClearTextureCacheAtEndOfFrame = false;
 
 void GameEngine::StartFrame() const {
+	interp_fps = CVarGetInteger("gInterpolationFPS", 30);
     using Ship::KbScancode;
     const int32_t dwScancode = this->context->GetWindow()->GetLastScancode();
     this->context->GetWindow()->SetLastScancode(-1);
