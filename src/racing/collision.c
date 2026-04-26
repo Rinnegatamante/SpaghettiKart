@@ -1548,7 +1548,6 @@ void add_collision_triangle(Vtx* vtx1, Vtx* vtx2, Vtx* vtx3, s8 surfaceType, u16
     triangle->vtx2 = vtx2;
     triangle->vtx3 = vtx3;
     if ((triangle->vtx1->v.flag == 4) && (triangle->vtx2->v.flag == 4) && (triangle->vtx3->v.flag == 4)) {
-
         return;
     }
 
@@ -2044,7 +2043,7 @@ void generate_collision_mesh(Gfx* addr, s8 surfaceType, u16 sectionId) {
                 break;
             case G_DL_OTR_HASH:
                 gfx++;
-                uint64_t hash = gfx->words.w0 << 32 | gfx->words.w1;
+                uint64_t hash = (uint64_t)gfx->words.w0 << 32 | gfx->words.w1;
                 generate_collision_mesh(ResourceGetDataByCrc(hash), surfaceType, sectionId);
                 break;
             case G_DL_OTR_FILEPATH:
@@ -2073,7 +2072,7 @@ void generate_collision_mesh(Gfx* addr, s8 surfaceType, u16 sectionId) {
             }
             case G_VTX_OTR_HASH:
                 gfx++;
-                hash = gfx->words.w0 << 32 | gfx->words.w1;
+                hash = (uint64_t)gfx->words.w0 << 32 | gfx->words.w1;
                 int numVerts = (lo >> 12) & ((1<<8)-1);
                 int bufferIndex = ((lo >> 1) & ((1<<7)-1));
                 bufferIndex = numVerts - bufferIndex; 
@@ -2193,7 +2192,7 @@ void find_vtx_and_set_colours(Gfx* displayList, s8 alpha, u8 red, u8 green, u8 b
             find_vtx_and_set_colours((Gfx*) hi, alpha, red, green, blue);
         } else if (opcode == (G_DL_OTR_HASH << 24)) {
             gfx++;
-            uint64_t hash = gfx->words.w0 << 32 | gfx->words.w1;
+            uint64_t hash = (uint64_t)gfx->words.w0 << 32 | gfx->words.w1;
             find_vtx_and_set_colours(ResourceGetDataByCrc(hash), alpha, red, green, blue);
         } else if (opcode == (G_DL_OTR_FILEPATH << 24)) {
             find_vtx_and_set_colours(ResourceGetDataByName((const char*)hi), alpha, red, green, blue);
@@ -2216,7 +2215,7 @@ void find_vtx_and_set_colours(Gfx* displayList, s8 alpha, u8 red, u8 green, u8 b
             set_vertex_colours((uintptr_t)vtx, count, index, alpha, red, green, blue);
         } else if (opcode == (G_VTX_OTR_HASH << 24)) {
             gfx++;
-            uint64_t hash = gfx->words.w0 << 32 | gfx->words.w1;
+            uint64_t hash = (uint64_t)gfx->words.w0 << 32 | gfx->words.w1;
             int numVerts = (lo >> 12) & ((1<<8)-1);
             int bufferIndex = ((lo >> 1) & ((1<<7)-1));
             bufferIndex = numVerts - bufferIndex; 
