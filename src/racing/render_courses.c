@@ -79,7 +79,7 @@ void parse_track_displaylists(TrackSections* asset) {
         if (addr == NULL) {
             printf("Warning: Could not find resource for section %d with crc 0x%llX\n", section->sectionId,
                    section->crc);
-            addr = (void*) section->crc;
+            addr = section->model;
         }
         generate_collision_mesh(addr, section->surfaceType, section->sectionId);
         section++;
