@@ -181,9 +181,9 @@ enum animation_type { RENDER_MODEL_OR_ADD_POS, DISABLE_AUTOMATIC_POP_MATRIX, POP
  * in the armature
  */
 typedef struct {
-    /* 0x00 */ s64 type;
-    /* 0x04 */ s64 size;
-    /* 0x08 */ s64 always_zero_never_used;
+    /* 0x00 */ s32 type;
+    /* 0x04 */ s32 size;
+    /* 0x08 */ s32 always_zero_never_used;
     /* 0x0C */ Gfx* model;
     /* 0x10 */ s64 pos[3];
 } Armature;
