@@ -10,7 +10,7 @@
 // THE REST OF YOUR APP SHOULD USE A DIFFERENT GL LOADER: ANY GL LOADER OF YOUR CHOICE.
 //
 // IF YOU GET BUILD ERRORS IN THIS FILE (commonly macro redefinitions or function redefinitions):
-// IT LIKELY MEANS THAT YOU ARE BUILDING 'imgui_impl_opengl3.cpp' OR INCUDING 'imgui_impl_opengl3_loader.h'
+// IT LIKELY MEANS THAT YOU ARE BUILDING 'imgui_impl_opengl3.cpp' OR INCLUDING 'imgui_impl_opengl3_loader.h'
 // IN THE SAME COMPILATION UNIT AS ONE OF YOUR FILE WHICH IS USING A THIRD-PARTY OPENGL LOADER.
 // (e.g. COULD HAPPEN IF YOU ARE DOING A UNITY/JUMBO BUILD, OR INCLUDING .CPP FILES FROM OTHERS)
 // YOU SHOULD NOT BUILD BOTH IN THE SAME COMPILATION UNIT.
@@ -181,6 +181,9 @@ typedef khronos_uint8_t GLubyte;
 #define GL_LINEAR                         0x2601
 #define GL_TEXTURE_MAG_FILTER             0x2800
 #define GL_TEXTURE_MIN_FILTER             0x2801
+#define GL_TEXTURE_WRAP_S                 0x2802
+#define GL_TEXTURE_WRAP_T                 0x2803
+#define GL_REPEAT                         0x2901
 typedef void (APIENTRYP PFNGLPOLYGONMODEPROC) (GLenum face, GLenum mode);
 typedef void (APIENTRYP PFNGLSCISSORPROC) (GLint x, GLint y, GLsizei width, GLsizei height);
 typedef void (APIENTRYP PFNGLTEXPARAMETERIPROC) (GLenum target, GLenum pname, GLint param);
@@ -231,6 +234,9 @@ GLAPI void APIENTRY glDeleteTextures (GLsizei n, const GLuint *textures);
 GLAPI void APIENTRY glGenTextures (GLsizei n, GLuint *textures);
 #endif
 #endif /* GL_VERSION_1_1 */
+#ifndef GL_VERSION_1_2
+#define GL_CLAMP_TO_EDGE                  0x812F
+#endif /* GL_VERSION_1_2 */
 #ifndef GL_VERSION_1_3
 #define GL_TEXTURE0                       0x84C0
 #define GL_ACTIVE_TEXTURE                 0x84E0
@@ -477,9 +483,7 @@ union ImGL3WProcs {
         PFNGLACTIVETEXTUREPROC            ActiveTexture;
         PFNGLATTACHSHADERPROC             AttachShader;
         PFNGLBINDBUFFERPROC               BindBuffer;
-#ifndef __vita__
         PFNGLBINDSAMPLERPROC              BindSampler;
-#endif
         PFNGLBINDTEXTUREPROC              BindTexture;
         PFNGLBINDVERTEXARRAYPROC          BindVertexArray;
         PFNGLBLENDEQUATIONPROC            BlendEquation;
@@ -497,9 +501,7 @@ union ImGL3WProcs {
         PFNGLDELETESHADERPROC             DeleteShader;
         PFNGLDELETETEXTURESPROC           DeleteTextures;
         PFNGLDELETEVERTEXARRAYSPROC       DeleteVertexArrays;
-#ifndef __vita__
         PFNGLDETACHSHADERPROC             DetachShader;
-#endif
         PFNGLDISABLEPROC                  Disable;
         PFNGLDISABLEVERTEXATTRIBARRAYPROC DisableVertexAttribArray;
         PFNGLDRAWELEMENTSPROC             DrawElements;
@@ -668,9 +670,6 @@ static GL3WglProc get_proc(const char *proc)
 }
 #else
 #include <dlfcn.h>
-#ifdef __vita__
-void *vglGetProcAddress(const char *name);
-#endif
 
 static void* libgl;  // OpenGL library
 static void* libglx;  // GLX library
@@ -679,7 +678,6 @@ static GL3WGetProcAddressProc gl_get_proc_address;
 
 static void close_libgl(void)
 {
-#ifndef __vita__
     if (libgl) {
         dlclose(libgl);
         libgl = NULL;
@@ -692,22 +690,16 @@ static void close_libgl(void)
         dlclose(libglx);
         libglx = NULL;
     }
-#endif
 }
 
 static int is_library_loaded(const char* name, void** lib)
 {
-#ifdef __vita__
-	return 1;
-#else
     *lib = dlopen(name, RTLD_LAZY | RTLD_LOCAL | RTLD_NOLOAD);
     return *lib != NULL;
-#endif
 }
 
 static int open_libs(void)
 {
-#ifdef __vita__
     // On Linux we have two APIs to get process addresses: EGL and GLX.
     // EGL is supported under both X11 and Wayland, whereas GLX is X11-specific.
 
@@ -755,13 +747,12 @@ static int open_libs(void)
 
     if (libgl)
         return GL3W_OK;
-#endif
+
     return GL3W_ERROR_LIBRARY_OPEN;
 }
 
 static int open_libgl(void)
 {
-#ifndef __vita__
     int res = open_libs();
     if (res)
         return res;
@@ -777,16 +768,14 @@ static int open_libgl(void)
         close_libgl();
         return GL3W_ERROR_LIBRARY_OPEN;
     }
-#endif
+
     return GL3W_OK;
 }
 
 static GL3WglProc get_proc(const char* proc)
 {
     GL3WglProc res = NULL;
-#ifdef __vita__
-    res = (GL3WglProc)vglGetProcAddress(proc);
-#else
+
     // Before EGL version 1.5, eglGetProcAddress doesn't support querying core
     // functions and may return a dummy function if we try, so try to load the
     // function from the GL library directly first.
@@ -798,7 +787,7 @@ static GL3WglProc get_proc(const char* proc)
 
     if (!libegl && !res)
         *(void**)(&res) = dlsym(libgl, proc);
-#endif
+
     return res;
 }
 #endif
@@ -807,7 +796,6 @@ static struct { int major, minor; } version;
 
 static int parse_version(void)
 {
-#ifndef __vita__
     if (!glGetIntegerv)
         return GL3W_ERROR_INIT;
     glGetIntegerv(GL_MAJOR_VERSION, &version.major);
@@ -820,7 +808,6 @@ static int parse_version(void)
     }
     if (version.major < 2)
         return GL3W_ERROR_OPENGL_VERSION;
-#endif
     return GL3W_OK;
 }
 
@@ -856,9 +843,7 @@ static const char *proc_names[] = {
     "glActiveTexture",
     "glAttachShader",
     "glBindBuffer",
-#ifndef __vita__
     "glBindSampler",
-#endif
     "glBindTexture",
     "glBindVertexArray",
     "glBlendEquation",
@@ -876,9 +861,7 @@ static const char *proc_names[] = {
     "glDeleteShader",
     "glDeleteTextures",
     "glDeleteVertexArrays",
-#ifndef __vita__
     "glDetachShader",
-#endif
     "glDisable",
     "glDisableVertexAttribArray",
     "glDrawElements",

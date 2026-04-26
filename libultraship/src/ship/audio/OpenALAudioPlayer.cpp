@@ -21,9 +21,9 @@ void OpenALAudioPlayer::DoClose() {
     alcDestroyContext(mContext);
     alcCloseDevice(mDevice);
 
-    mSource      = 0;
-    mContext     = nullptr;
-    mDevice      = nullptr;
+    mSource = 0;
+    mContext = nullptr;
+    mDevice = nullptr;
 }
 
 bool OpenALAudioPlayer::DoInit() {
@@ -55,14 +55,14 @@ bool OpenALAudioPlayer::DoInit() {
     alSourceQueueBuffers(mSource, NUM_BUFFERS, mBuffers);
     alSourcePlay(mSource);
 
-    SPDLOG_INFO("OpenAL initialized: {} ch, {} Hz", ch, gameRate);
+    SPDLOG_INFO("OpenAL initialized: {} ch, {} Hz", this->GetNumOutputChannels(), this->GetSampleLength());
     return true;
 }
 
 int OpenALAudioPlayer::Buffered() {
-    ALint queued    = 0;
+    ALint queued = 0;
     ALint processed = 0;
-    alGetSourcei(mSource, AL_BUFFERS_QUEUED,    &queued);
+    alGetSourcei(mSource, AL_BUFFERS_QUEUED, &queued);
     alGetSourcei(mSource, AL_BUFFERS_PROCESSED, &processed);
 
     int bufferedBuffers = queued - processed;

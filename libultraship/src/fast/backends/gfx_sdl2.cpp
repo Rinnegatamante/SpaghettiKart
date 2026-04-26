@@ -333,7 +333,8 @@ void GfxWindowBackendSDL2::Init(const char* gameName, const char* gfxApiName, bo
 #ifdef __vita__
     width = 960;
     height = 545;
-    sceIoMkdir("ux0:data/spaghetti/shader_cache", 0777);
+    posX = 0;
+    posY = 0;
 #endif
     mWindowWidth = width;
     mWindowHeight = height;

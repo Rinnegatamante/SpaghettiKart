@@ -4,16 +4,17 @@
 // - Requires linking with the GameController framework ("-framework GameController").
 
 // Implemented features:
-//  [X] Platform: Mouse cursor shape and visibility. Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
+//  [X] Platform: Clipboard support is part of core Dear ImGui (no specific code in this backend).
 //  [X] Platform: Mouse support. Can discriminate Mouse/Pen.
-//  [X] Platform: Keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy kVK_* values will also be supported unless IMGUI_DISABLE_OBSOLETE_KEYIO is set]
-//  [X] Platform: OSX clipboard is supported within core Dear ImGui (no specific code in this backend).
+//  [X] Platform: Keyboard support. Since 1.87 we are using the io.AddKeyEvent() function. Pass ImGuiKey values to all key functions e.g. ImGui::IsKeyPressed(ImGuiKey_Space). [Legacy kVK_* values are obsolete since 1.87 and not supported since 1.91.5]
 //  [X] Platform: Gamepad support. Enabled with 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad'.
+//  [X] Platform: Mouse cursor shape and visibility (ImGuiBackendFlags_HasMouseCursors). Disable with 'io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange'.
 //  [X] Platform: IME support.
 //  [x] Platform: Multi-viewport / platform windows.
-// Issues:
-//  [ ] Platform: Multi-viewport: Window size not correctly reported when enabling io.ConfigViewportsNoDecoration
-//  [ ] Platform: Multi-viewport: ParentViewportID not honored, and so io.ConfigViewportsNoDefaultParent has no effect (minor).
+// Missing features or Issues:
+//  [ ] Missing ImGuiMouseCursor_Wait and ImGuiMouseCursor_Progress cursors.
+//  [ ] Multi-viewport: Window size not correctly reported when enabling io.ConfigViewportsNoDecoration
+//  [ ] Multi-viewport: ParentViewportID not honored, and so io.ConfigViewportsNoDefaultParent has no effect (minor).
 
 // You can use unmodified imgui_impl_* files in your project. See examples/ folder for examples of using this.
 // Prefer including the entire imgui/ repository into your project (either as a copy or as a submodule), and only build the backends you need.
@@ -33,10 +34,16 @@
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)
-//  2024-XX-XX: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2025-XX-XX: Added support for multiple windows via the ImGuiPlatformIO interface.
+//  2025-01-20: Removed notification observer when shutting down. (#8331)
+//  2024-08-22: moved some OS/backend related function pointers from ImGuiIO to ImGuiPlatformIO:
+//               - io.GetClipboardTextFn    -> platform_io.Platform_GetClipboardTextFn
+//               - io.SetClipboardTextFn    -> platform_io.Platform_SetClipboardTextFn
+//               - io.PlatformSetImeDataFn  -> platform_io.Platform_SetImeDataFn
+//  2024-07-02: Update for io.SetPlatformImeDataFn() -> io.PlatformSetImeDataFn() renaming in main library.
 //  2023-10-05: Inputs: Added support for extra ImGuiKey values: F13 to F20 function keys. Stopped mapping F13 into PrintScreen.
 //  2023-04-09: Inputs: Added support for io.AddMouseSourceEvent() to discriminate ImGuiMouseSource_Mouse/ImGuiMouseSource_Pen.
-//  2023-02-01: Fixed scroll wheel scaling for devices emitting events with hasPreciseScrollingDeltas==false (e.g. non-Apple mices).
+//  2023-02-01: Fixed scroll wheel scaling for devices emitting events with hasPreciseScrollingDeltas==false (e.g. non-Apple mice).
 //  2022-11-02: Fixed mouse coordinates before clicking the host window.
 //  2022-10-06: Fixed mouse inputs on flipped views.
 //  2022-09-26: Inputs: Renamed ImGuiKey_ModXXX introduced in 1.87 to ImGuiMod_XXX (old names still supported).
@@ -87,18 +94,17 @@ struct ImGui_ImplOSX_Data
     id                          Monitor;
     NSWindow*                   Window;
 
-    ImGui_ImplOSX_Data()        { memset(this, 0, sizeof(*this)); }
+    ImGui_ImplOSX_Data()        { memset((void*)this, 0, sizeof(*this)); }
 };
 
-static ImGui_ImplOSX_Data*      ImGui_ImplOSX_CreateBackendData()   { return IM_NEW(ImGui_ImplOSX_Data)(); }
 static ImGui_ImplOSX_Data*      ImGui_ImplOSX_GetBackendData()      { return (ImGui_ImplOSX_Data*)ImGui::GetIO().BackendPlatformUserData; }
 static void                     ImGui_ImplOSX_DestroyBackendData()  { IM_DELETE(ImGui_ImplOSX_GetBackendData()); }
 
 static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CFTimeInterval)(double)(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / 1e9); }
 
 // Forward Declarations
-static void ImGui_ImplOSX_InitPlatformInterface();
-static void ImGui_ImplOSX_ShutdownPlatformInterface();
+static void ImGui_ImplOSX_InitMultiViewportSupport();
+static void ImGui_ImplOSX_ShutdownMultiViewportSupport();
 static void ImGui_ImplOSX_UpdateMonitors();
 static void ImGui_ImplOSX_AddTrackingArea(NSView* _Nonnull view);
 static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
@@ -285,7 +291,10 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 @end
 
 // Functions
-static ImGuiKey ImGui_ImplOSX_KeyCodeToImGuiKey(int key_code)
+
+// Not static to allow third-party code to use that if they want to (but undocumented)
+ImGuiKey ImGui_ImplOSX_KeyCodeToImGuiKey(int key_code);
+ImGuiKey ImGui_ImplOSX_KeyCodeToImGuiKey(int key_code)
 {
     switch (key_code)
     {
@@ -423,47 +432,49 @@ IMGUI_IMPL_API void ImGui_ImplOSX_NewFrame(void* _Nullable view) {
 bool ImGui_ImplOSX_Init(NSView* view)
 {
     ImGuiIO& io = ImGui::GetIO();
-    ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_CreateBackendData();
-    io.BackendPlatformUserData = (void*)bd;
+    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    IMGUI_CHECKVERSION();
+    IM_ASSERT(io.BackendPlatformUserData == nullptr && "Already initialized a platform backend!");
 
     // Setup backend capabilities flags
+    ImGui_ImplOSX_Data* bd = IM_NEW(ImGui_ImplOSX_Data)();
+    io.BackendPlatformUserData = (void*)bd;
+    io.BackendPlatformName = "imgui_impl_osx";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;           // We can honor GetMouseCursor() values (optional)
     //io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;      // We can create multi-viewports on the Platform side (optional)
     //io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.AddMouseViewportEvent() with correct data (optional)
-    io.BackendPlatformName = "imgui_impl_osx";
 
     bd->Observer = [ImGuiObserver new];
     bd->Window = view.window ?: NSApp.orderedWindows.firstObject;
     ImGuiViewport* main_viewport = ImGui::GetMainViewport();
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (__bridge_retained void*)bd->Window;
     ImGui_ImplOSX_UpdateMonitors();
-    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        ImGui_ImplOSX_InitPlatformInterface();
+    ImGui_ImplOSX_InitMultiViewportSupport();
 
     // Load cursors. Some of them are undocumented.
     bd->MouseCursorHidden = false;
     bd->MouseCursors[ImGuiMouseCursor_Arrow] = [NSCursor arrowCursor];
     bd->MouseCursors[ImGuiMouseCursor_TextInput] = [NSCursor IBeamCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeAll] = [NSCursor closedHandCursor];
-    bd->MouseCursors[ImGuiMouseCursor_Hand] = [NSCursor pointingHandCursor];
-    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = [NSCursor operationNotAllowedCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNS] = [NSCursor respondsToSelector:@selector(_windowResizeNorthSouthCursor)] ? [NSCursor _windowResizeNorthSouthCursor] : [NSCursor resizeUpDownCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeEW] = [NSCursor respondsToSelector:@selector(_windowResizeEastWestCursor)] ? [NSCursor _windowResizeEastWestCursor] : [NSCursor resizeLeftRightCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNESW] = [NSCursor respondsToSelector:@selector(_windowResizeNorthEastSouthWestCursor)] ? [NSCursor _windowResizeNorthEastSouthWestCursor] : [NSCursor closedHandCursor];
     bd->MouseCursors[ImGuiMouseCursor_ResizeNWSE] = [NSCursor respondsToSelector:@selector(_windowResizeNorthWestSouthEastCursor)] ? [NSCursor _windowResizeNorthWestSouthEastCursor] : [NSCursor closedHandCursor];
+    bd->MouseCursors[ImGuiMouseCursor_Hand] = [NSCursor pointingHandCursor];
+    bd->MouseCursors[ImGuiMouseCursor_NotAllowed] = [NSCursor operationNotAllowedCursor];
 
     // Note that imgui.cpp also include default OSX clipboard handlers which can be enabled
     // by adding '#define IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS' in imconfig.h and adding '-framework ApplicationServices' to your linker command-line.
     // Since we are already in ObjC land here, it is easy for us to add a clipboard handler using the NSPasteboard api.
-    io.SetClipboardTextFn = [](void*, const char* str) -> void
+    platform_io.Platform_SetClipboardTextFn = [](ImGuiContext*, const char* str) -> void
     {
         NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
         [pasteboard declareTypes:[NSArray arrayWithObject:NSPasteboardTypeString] owner:nil];
         [pasteboard setString:[NSString stringWithUTF8String:str] forType:NSPasteboardTypeString];
     };
 
-    io.GetClipboardTextFn = [](void*) -> const char*
+    platform_io.Platform_GetClipboardTextFn = [](ImGuiContext*) -> const char*
     {
         NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
         NSString* available = [pasteboard availableTypeFromArray: [NSArray arrayWithObject:NSPasteboardTypeString]];
@@ -498,7 +509,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
     [view addSubview:bd->KeyEventResponder];
     ImGui_ImplOSX_AddTrackingArea(view);
 
-    io.SetPlatformImeDataFn = [](ImGuiViewport* viewport, ImGuiPlatformImeData* data) -> void
+    platform_io.Platform_SetImeDataFn = [](ImGuiContext*, ImGuiViewport* viewport, ImGuiPlatformImeData* data) -> void
     {
         ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
         if (data->WantVisible)
@@ -522,6 +533,7 @@ void ImGui_ImplOSX_Shutdown()
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
     IM_ASSERT(bd != nullptr && "No platform backend to shutdown, or already shutdown?");
 
+    [[NSNotificationCenter defaultCenter] removeObserver:bd->Observer];
     bd->Observer = nullptr;
     if (bd->Monitor != nullptr)
     {
@@ -529,7 +541,7 @@ void ImGui_ImplOSX_Shutdown()
         bd->Monitor = nullptr;
     }
 
-    ImGui_ImplOSX_ShutdownPlatformInterface();
+    ImGui_ImplOSX_ShutdownMultiViewportSupport();
     ImGui_ImplOSX_DestroyBackendData();
     ImGuiIO& io = ImGui::GetIO();
     io.BackendPlatformName = nullptr;
@@ -917,7 +929,7 @@ static void ImGui_ImplOSX_CreateWindow(ImGuiViewport* viewport)
     window.opaque = YES;
 
     KeyEventResponder* view = [[KeyEventResponder alloc] initWithFrame:rect];
-    if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6)
+    if (floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_6 && ceil(NSAppKitVersionNumber) < NSAppKitVersionNumber10_15)
         [view setWantsBestResolutionOpenGLSurface:YES];
 
     window.contentView = view;
@@ -1088,7 +1100,7 @@ static void ImGui_ImplOSX_UpdateMonitors()
     }
 }
 
-static void ImGui_ImplOSX_InitPlatformInterface()
+static void ImGui_ImplOSX_InitMultiViewportSupport()
 {
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
 
@@ -1122,7 +1134,7 @@ static void ImGui_ImplOSX_InitPlatformInterface()
                                              object:nil];
 }
 
-static void ImGui_ImplOSX_ShutdownPlatformInterface()
+static void ImGui_ImplOSX_ShutdownMultiViewportSupport()
 {
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
     [NSNotificationCenter.defaultCenter removeObserver:bd->Observer
