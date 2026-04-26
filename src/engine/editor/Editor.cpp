@@ -242,7 +242,7 @@ namespace TrackEditor {
 /** C BRIDGE FUNCTIONS **/
 
 extern "C" void Editor_Launch(const char* resourceName) {
-#if not defined(__SWITCH__) and not defined(__WIIU__)
+#if not defined(__SWITCH__) and not defined(__WIIU__) and not defined(__vita__)
     TrackBrowser::Instance->SetTrack(std::string(resourceName));
     gEditor.Enable();
 #endif

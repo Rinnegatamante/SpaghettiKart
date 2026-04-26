@@ -263,7 +263,14 @@ bool Checkbox(const char* _label, bool* value, const CheckboxOptions& options) {
                                                             : ImGuiCol_FrameBg),
                        true, style.FrameRounding);
     ImU32 check_col = ImGui::GetColorU32(ImGuiCol_CheckMark);
-    if (*value) {
+	bool mixed_value = (g.LastItemData.ItemFlags & ImGuiItemFlags_MixedValue) != 0;
+    if (mixed_value) {
+        // Undocumented tristate/mixed/indeterminate checkbox (#2644)
+        // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all
+        // widgets (not just checkbox)
+        ImVec2 pad(ImMax(1.0f, IM_TRUNC(square_sz / 3.6f)), ImMax(1.0f, IM_TRUNC(square_sz / 3.6f)));
+        window->DrawList->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
+    } else if (*value) {
         const float pad = ImMax(1.0f, IM_TRUNC(square_sz / 6.0f));
         ImGui::RenderCheckMark(window->DrawList, check_bb.Min + ImVec2(pad, pad), check_col, square_sz - pad * 2.0f);
     }
