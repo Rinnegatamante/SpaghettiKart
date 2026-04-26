@@ -4,6 +4,8 @@
 #include "ship/audio/CoreAudioAudioPlayer.h"
 #endif
 
+#include "ship/audio/OpenALAudioPlayer.h"
+
 #include "ship/Context.h"
 #include "ship/controller/controldeck/ControlDeck.h"
 
@@ -28,6 +30,9 @@ void Audio::InitAudioPlayer() {
         case AudioBackend::SDL:
             mAudioPlayer = std::make_shared<SDLAudioPlayer>(this->mAudioSettings);
             break;
+        case AudioBackend::OAL:
+            mAudioPlayer = std::make_shared<OpenALAudioPlayer>(this->mAudioSettings);
+            break;
         default:
             mAudioPlayer = std::make_shared<NullAudioPlayer>(this->mAudioSettings);
             break;
@@ -49,6 +54,7 @@ void Audio::Init() {
     mAvailableAudioBackends->push_back(AudioBackend::COREAUDIO);
 #endif
     mAvailableAudioBackends->push_back(AudioBackend::SDL);
+    mAvailableAudioBackends->push_back(AudioBackend::OAL);
     mAvailableAudioBackends->push_back(AudioBackend::NUL);
 
     SetCurrentAudioBackend(Context::GetInstance()->GetConfig()->GetCurrentAudioBackend());

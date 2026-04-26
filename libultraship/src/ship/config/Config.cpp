@@ -250,6 +250,10 @@ AudioBackend Config::GetCurrentAudioBackend() {
     if (backendName == "sdl") {
         return AudioBackend::SDL;
     }
+	
+    if (backendName == "openal") {
+        return AudioBackend::OAL;
+    }
 
     if (backendName == "null") {
         return AudioBackend::NUL;
@@ -293,6 +297,9 @@ void Config::SetCurrentAudioBackend(AudioBackend backend) {
             break;
         case AudioBackend::SDL:
             SetString("Window.AudioBackend", "sdl");
+            break;
+        case AudioBackend::OAL:
+            SetString("Window.AudioBackend", "openal");
             break;
         case AudioBackend::NUL:
             SetString("Window.AudioBackend", "null");
