@@ -952,6 +952,7 @@ void CM_ThrowRuntimeError(const char* fmt, ...) {
 extern "C" s8 *sMemoryPool;
 extern "C" uintptr_t sPoolEnd;
 extern "C" void *vita_main(void *argv);
+#include <vitaGL.h>
 #endif
 
 #ifdef _WIN32
@@ -981,6 +982,8 @@ extern "C"
 }
 
 extern "C" void *vita_main(void *argv) {
+	vglSetParamBufferSize(6 * 1024 * 1024);
+    vglInitWithCustomThreshold(0, 960, 544, 4 * 1024 * 1024, 0, 0, 0, SCE_GXM_MULTISAMPLE_4X);
 #endif
 #ifdef _WIN32
     // Allow non-ascii characters for Windows
