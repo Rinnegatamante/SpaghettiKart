@@ -34,6 +34,8 @@
 #include <vitasdk.h>
 #endif
 
+#include "robin_hood.h"
+
 /*enum {
     CC_0,
     CC_TEXEL0,
@@ -384,7 +386,7 @@ class Interpreter {
     GfxRenderingAPI* GetCurrentRenderingAPI();
     void StartFrame();
     void RunGuiOnly();
-    void Run(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtx_replacements);
+    void Run(Gfx* commands, const robin_hood::unordered_map<Mtx*, MtxF>& mtx_replacements);
     void EndFrame();
     void HandleWindowEvents();
     bool IsFrameReady();
@@ -534,9 +536,9 @@ class Interpreter {
     std::unordered_map<std::pair<float, float>, uint16_t, hash_pair_ff> mGetPixelDepthCached; // get_pixel_depth_cached;
     std::map<std::string, MaskedTextureEntry, std::less<>> mMaskedTextures;
 
-    const std::unordered_map<Mtx*, MtxF>* mCurMtxReplacements;
+    const robin_hood::unordered_map<Mtx*, MtxF>* mCurMtxReplacements;
     bool mMarkerOn; // This was originally a debug feature. Now it seems to control s2dex?
-    std::unordered_map<size_t, const char*> mShaders;
+    robin_hood::unordered_map<size_t, const char*> mShaders;
 
     typedef size_t ShaderId;
     std::stack<ShaderId> mShaderStack;

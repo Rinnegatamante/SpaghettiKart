@@ -4,6 +4,8 @@
 #include "ship/controller/controldevice/controller/mapping/keyboard/KeyboardScancodes.h"
 #include "FastMouseStateManager.h"
 
+#include "robin_hood.h"
+
 union Gfx;
 #include "interpreter.h"
 
@@ -56,7 +58,7 @@ class Fast3dWindow : public Ship::Window {
     void SetTextureFilter(FilteringMode filteringMode);
     void SetRendererUCode(UcodeHandlers ucode);
     void EnableSRGBMode();
-    bool DrawAndRunGraphicsCommands(Gfx* commands, const std::unordered_map<Mtx*, MtxF>& mtxReplacements);
+    bool DrawAndRunGraphicsCommands(Gfx* commands, const robin_hood::unordered_map<Mtx*, MtxF>& mtxReplacements);
 
     std::weak_ptr<Interpreter> GetInterpreterWeak() const;
 

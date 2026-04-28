@@ -31,6 +31,8 @@ static const char engine_asset_file[] = "spaghetti.o2r";
 #define NUM_AUDIO_CHANNELS 2
 #define SAMPLES_PER_FRAME (SAMPLES_HIGH * NUM_AUDIO_CHANNELS * 2)
 
+#include "robin_hood.h"
+
 Fast::Interpreter* GetInterpreter();
 
 struct CtlEntry;
@@ -72,7 +74,7 @@ class GameEngine {
     static uint32_t GetInterpolationFPS();
     static uint32_t GetInterpolationFrameCount();
     void StartFrame() const;
-    static void RunCommands(Gfx* pool, const std::vector<std::unordered_map<Mtx*, MtxF>>& mtx_replacements);
+    static void RunCommands(Gfx* pool, const std::vector<robin_hood::unordered_map<Mtx*, MtxF>>& mtx_replacements);
     void ProcessFrame(void (*run_one_game_iter)()) const;
     static void Destroy();
     static void ProcessGfxCommands(Gfx* pool);
