@@ -944,8 +944,11 @@ void GfxRenderingAPIOGL::Init() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     mPixelDepthRbSize = 1;
-
+#ifdef __vita__
+    mMaxMsaaLevel = 1;
+#else
     glGetIntegerv(GL_MAX_SAMPLES, &mMaxMsaaLevel);
+#endif
 }
 
 void GfxRenderingAPIOGL::OnResize() {
@@ -1165,21 +1168,16 @@ void GfxRenderingAPIOGL::CopyFramebuffer(int fb_dst_id, int fb_src_id, int srcX0
     glBindFramebuffer(GL_READ_FRAMEBUFFER, src.fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst.fbo);
 
-#ifndef __vita__
     if (fb_src_id == 0) {
         glReadBuffer(GL_BACK);
     } else {
         glReadBuffer(GL_COLOR_ATTACHMENT0);
     }
-#endif
-
     glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffers[mCurrentFrameBuffer].fbo);
 
-#ifndef __vita__
     glReadBuffer(GL_BACK);
-#endif
 
     if (mLastScissorEnabled != 1) {
         mLastScissorEnabled = 1;
@@ -1191,11 +1189,8 @@ void GfxRenderingAPIOGL::ReadFramebufferToCPU(int fb_id, uint32_t width, uint32_
     if (fb_id >= (int)mFrameBuffers.size()) {
         return;
     }
-#ifdef __vita__
-    return;
-#endif
     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffers[fb_id].fbo);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, (void*)rgba16_buf);
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, rgba16_buf);
     glBindFramebuffer(GL_FRAMEBUFFER, mFrameBuffers[mCurrentFrameBuffer].fbo);
 }
 
