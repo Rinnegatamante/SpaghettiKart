@@ -17,6 +17,8 @@ void OpenALAudioPlayer::DoClose() {
     alSourcei(mSource, AL_BUFFER, 0);
     alDeleteSources(1, &mSource);
     alDeleteBuffers(NUM_BUFFERS, mBuffers);
+	
+	while (!mAvailableBuffers.empty()) mAvailableBuffers.pop();
 
     alcDestroyContext(mContext);
     alcCloseDevice(mDevice);
@@ -44,16 +46,10 @@ bool OpenALAudioPlayer::DoInit() {
 
     alGenBuffers(NUM_BUFFERS, mBuffers);
     alGenSources(1, &mSource);
-    ALenum fmt = (this->GetNumOutputChannels() == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
-
-    // Queue buffers used as a circular pool with full silent data
-    std::vector<int16_t> silence(this->GetSampleLength() * this->GetNumOutputChannels(), 0);
 
     for (int i = 0; i < NUM_BUFFERS; i++) {
-        alBufferData(mBuffers[i], fmt, silence.data(), static_cast<ALsizei>(silence.size() * sizeof(int16_t)), this->GetSampleRate());
+        mAvailableBuffers.push(mBuffers[i]);
     }
-    alSourceQueueBuffers(mSource, NUM_BUFFERS, mBuffers);
-    alSourcePlay(mSource);
 
     SPDLOG_INFO("OpenAL initialized: {} ch, {} Hz", this->GetNumOutputChannels(), this->GetSampleLength());
     return true;
@@ -73,13 +69,22 @@ void OpenALAudioPlayer::DoPlay(const uint8_t* buf, size_t len) {
     // Check if we have at least one free buffer to use
     ALint processed = 0;
     alGetSourcei(mSource, AL_BUFFERS_PROCESSED, &processed);
-    if (processed == 0) {
+    
+    // Insert back to the available queue any processed buffer
+    while (processed > 0) {
+        ALuint freeBuf = 0;
+        alSourceUnqueueBuffers(mSource, 1, &freeBuf);
+        mAvailableBuffers.push(freeBuf);
+        processed--;
+    }
+	
+    if (mAvailableBuffers.empty()) {
         return;
     }
     
     // Get first available free buffer and use it to deploy new audio
-    ALuint freeBuffer = 0;
-    alSourceUnqueueBuffers(mSource, 1, &freeBuffer);
+    ALuint freeBuffer = mAvailableBuffers.front();
+    mAvailableBuffers.pop();
     ALenum fmt = (this->GetNumOutputChannels() == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
     alBufferData(freeBuffer, fmt, buf, static_cast<ALsizei>(len), this->GetSampleRate());
     alSourceQueueBuffers(mSource, 1, &freeBuffer);
