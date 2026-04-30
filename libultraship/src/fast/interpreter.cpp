@@ -131,7 +131,7 @@ Interpreter::Interpreter() {
     mRsp = new RSP();
     mRdp = new RDP();
 #ifdef __vita__
-    mBufVbo = (float *)vglAllocFromScratch(12 * 1024 * 1024);
+    mBufVbo = (float *)vglAllocFromScratch(10 * 1024 * 1024);
 #else
     mBufVbo = new float[MAX_TRI_BUFFER * (32 * 3)];
 #endif
@@ -4857,7 +4857,7 @@ void Interpreter::EndFrame() {
     mRapi->FinishRender();
     mWapi->SwapBuffersEnd();
 #ifdef __vita__
-	mBufVbo = (float*)vglAllocFromScratch(12 * 1024 * 1024);
+	mBufVbo = (float*)vglAllocFromScratch(10 * 1024 * 1024);
 #endif
 }
 
