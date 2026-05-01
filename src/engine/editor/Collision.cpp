@@ -37,7 +37,7 @@ namespace TrackEditor {
                     break;
                 case G_DL_OTR_HASH:
                     ptr++;
-                    GenerateCollisionMesh(object, (Gfx*)ResourceGetDataByCrc(((uint64_t)(ptr->words.w0 << 32)) + ptr->words.w1), scale);
+                    GenerateCollisionMesh(object, (Gfx*)ResourceGetDataByCrc(((uint64_t)(ptr->words.w0) << 32) + ptr->words.w1), scale);
                     break;
                 case G_DL_OTR_FILEPATH:
                    // printf("otr filepath: %s\n", (const char*)hi);
@@ -48,7 +48,7 @@ namespace TrackEditor {
                     break;
                 case G_VTX_OTR_HASH: {
                     ptr++;
-                    vtx = (Vtx*)ResourceGetDataByCrc(((uint64_t)(ptr->words.w0 << 32)) + ptr->words.w1);
+                    vtx = (Vtx*)ResourceGetDataByCrc(((uint64_t)(ptr->words.w0) << 32) + ptr->words.w1);
                     break;
                 }
                 case G_VTX_OTR_FILEPATH: {
