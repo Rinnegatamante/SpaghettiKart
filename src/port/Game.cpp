@@ -40,7 +40,7 @@
 
 #ifdef __vita__
 #include <vitasdk.h>
-int _newlib_heap_size_user = 200 * 1024 * 1024;
+int _newlib_heap_size_user = 260 * 1024 * 1024;
 #endif
 
 extern "C" {
