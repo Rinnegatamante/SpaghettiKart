@@ -1,3 +1,28 @@
+# Spaghetti Kart Vita
+
+This is a port of Spaghetti Kart (v.1.0.0 with several commits from upstream) for PSVita.
+
+## Setup Instructions
+- Download [Spaghetti Kart v.1.0.0](https://github.com/HarbourMasters/SpaghettiKart/releases/tag/1.0.0) for PC.
+- Follow its instructions to generate `mk64.o2r`.
+- Extract `spaghetti.zip` from the Release section in `ux0:data`.
+- Place `mk64.o2r` and `spaghetti.o2r` in `ux0:data/spaghetti`.
+- Install the vpk from the Release section.
+
+## Known Issues
+- There are issues with scissor testing, resulting in incorrect cropping in certain places.
+- There are issues with software culling, resulting in entities being invisible with certain camera angulations.
+- Cloud textures are glitched.
+
+## Credits
+- TheIronUniverse for the Livearea assets.
+
+## vitaGL flags
+
+HAVE_GLSL_TEXTURE_SIZE=1 STORE_DEPTH_STENCIL=1 NO_DEBUG=1 HAVE_PTHREAD=1
+
+# Original Readme
+
 ![Spaghetti Kart](docs/spaghettigithublight.png#gh-light-mode-only)
 ![Spaghetti Kart](docs/spaghettigithubnight.png#gh-dark-mode-only)
 
