@@ -185,7 +185,7 @@ typedef struct {
     /* 0x04 */ s32 size;
     /* 0x08 */ s32 always_zero_never_used;
     /* 0x0C */ Gfx* model;
-    /* 0x10 */ s64 pos[3];
+    /* 0x10 */ s32 pos[3];
 } Armature;
 
 typedef struct {
