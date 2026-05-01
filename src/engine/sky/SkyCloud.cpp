@@ -27,6 +27,8 @@ SkyCloud::SkyCloud(ScreenContext* screen, u16 cloudVariant, u16 posY, u16 rotY, 
     mY = posY;
     mRotY = rotY;
     mScale = (f32) scalePercent / 100.0;
+    mTextureWidth = 64;
+    mTextureHeight = 32;
 
     // Stock
     if (GameEngine_ResourceGetTexTypeByName((const char*)CM_GetProps()->CloudTexture) != 1) {
