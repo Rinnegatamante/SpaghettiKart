@@ -2193,7 +2193,7 @@ void find_vtx_and_set_colours(Gfx* displayList, s8 alpha, u8 red, u8 green, u8 b
             find_vtx_and_set_colours((Gfx*) hi, alpha, red, green, blue);
         } else if (opcode == (G_DL_OTR_HASH << 24)) {
             gfx++;
-            uint64_t hash = ((uint64-t)gfx->words.w0) << 32 | gfx->words.w1;
+            uint64_t hash = ((uint64_t)gfx->words.w0) << 32 | gfx->words.w1;
             find_vtx_and_set_colours(ResourceGetDataByCrc(hash), alpha, red, green, blue);
         } else if (opcode == (G_DL_OTR_FILEPATH << 24)) {
             find_vtx_and_set_colours(ResourceGetDataByName((const char*)hi), alpha, red, green, blue);
