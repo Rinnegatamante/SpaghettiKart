@@ -9,11 +9,6 @@ This is a port of Spaghetti Kart (v.1.0.0 with several commits from upstream) fo
 - Place `mk64.o2r` and `spaghetti.o2r` in `ux0:data/spaghetti`.
 - Install the vpk from the Release section.
 
-## Known Issues
-- There are issues with scissor testing, resulting in incorrect cropping in certain places.
-- There are issues with software culling, resulting in entities being invisible with certain camera angulations.
-- Cloud textures are glitched.
-
 ## Credits
 - TheIronUniverse for the Livearea assets.
 
