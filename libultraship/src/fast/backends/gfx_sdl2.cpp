@@ -216,9 +216,6 @@ GfxWindowBackendSDL2::~GfxWindowBackendSDL2() {
 }
 
 void GfxWindowBackendSDL2::SetFullscreenImpl(bool on, bool call_callback) {
-#ifdef __vita__
-	on = false;
-#endif
     if (mFullScreen == on) {
         return;
     }
@@ -332,7 +329,7 @@ void GfxWindowBackendSDL2::Init(const char* gameName, const char* gfxApiName, bo
                                 uint32_t height, int32_t posX, int32_t posY) {
 #ifdef __vita__
     width = 960;
-    height = 545;
+    height = 544;
     posX = 0;
     posY = 0;
 #endif
