@@ -40,8 +40,8 @@ void Audio::InitAudioPlayer() {
 
     if (mAudioPlayer && !mAudioPlayer->Init()) {
         // Failed to initialize system audio player.
-        // Fallback to Null if the native system player does not work.
-        SetCurrentAudioBackend(AudioBackend::NUL);
+        // Fallback to OpenAL if the native system player does not work.
+        SetCurrentAudioBackend(AudioBackend::OAL);
     }
 }
 
