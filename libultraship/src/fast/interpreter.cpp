@@ -2846,7 +2846,7 @@ void Interpreter::GfxDpFillRectangle(int32_t ulx, int32_t uly, int32_t lrx, int3
     uint32_t mode = (mRdp->other_mode_h & (3U << G_MDSFT_CYCLETYPE));
 
     if (ulx == 0) {
-        if (lrx == ((int32_t)(mNativeDimensions.width - 1) * 4)) {
+        if (lrx >= ((int32_t)(mNativeDimensions.width - 1) * 4)) {
             ulx = -1024;
             lrx = 2048;
         }
