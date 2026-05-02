@@ -1332,7 +1332,7 @@ extern "C" {
 
 void Interpreter::NormalizeVector(float v[3]) {
 #ifdef __vita__
-	normalize3_neon(v, v);
+    normalize3_neon(v, v);
 #else
     float s = sqrtf(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] /= s;
@@ -1349,7 +1349,7 @@ void Interpreter::TransposedMatrixMul(float res[3], const float a[3], const floa
 
 void Interpreter::MatrixMul(float res[4][4], const float a[4][4], const float b[4][4]) {
 #ifdef __vita__
-	matmul4_neon((float *)b, (float *)a, (float *)res);
+    matmul4_neon((float *)b, (float *)a, (float *)res);
 #else
     float tmp[4][4];
     for (int i = 0; i < 4; i++) {
@@ -2117,7 +2117,7 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
     }
 
 #ifdef __vita__
-	mBufVboNumTris++;
+    mBufVboNumTris++;
 #else
     if (++mBufVboNumTris == MAX_TRI_BUFFER) {
         // if (++mBufVbo_num_tris == 1) {
@@ -2845,12 +2845,15 @@ void Interpreter::GfxDpFillRectangle(int32_t ulx, int32_t uly, int32_t lrx, int3
     }
     uint32_t mode = (mRdp->other_mode_h & (3U << G_MDSFT_CYCLETYPE));
 
-    // OTRTODO: This is a bit of a hack for widescreen screen fades, but it'll work for now...
-    if (ulx == 0 && uly == 0 && lrx == (319 * 4) && lry == (239 * 4)) {
-        ulx = -1024;
-        uly = -1024;
-        lrx = 2048;
-        lry = 2048;
+    if (ulx == 0) {
+        if (lrx == ((int32_t)(mNativeDimensions.width - 1) * 4)) {
+            ulx = -1024;
+            lrx = 2048;
+        }
+        if (uly == 0 && lry == ((int32_t)(mNativeDimensions.height - 1) * 4)) {
+            uly = -1024;
+            lry = 2048;
+        }
     }
 
     if (mode == G_CYC_COPY || mode == G_CYC_FILL) {
@@ -4857,7 +4860,7 @@ void Interpreter::EndFrame() {
     mRapi->FinishRender();
     mWapi->SwapBuffersEnd();
 #ifdef __vita__
-	mBufVbo = (float*)vglAllocFromScratch(10 * 1024 * 1024);
+    mBufVbo = (float*)vglAllocFromScratch(10 * 1024 * 1024);
 #endif
 }
 
