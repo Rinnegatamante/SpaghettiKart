@@ -69,6 +69,6 @@ TrackPathPoint test_track_path[] = {
 };
 
 TrackSections test_track_addr[] = {
-    { mario_Plane_001_mesh, 255, 255, 0x0000 },
+    { .model = mario_Plane_001_mesh, 255, 255, 0x0000 },
     { 0x00000000, 0, 0, 0x00000 },
 };

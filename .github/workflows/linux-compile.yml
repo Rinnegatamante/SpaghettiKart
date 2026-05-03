@@ -139,3 +139,74 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache || true
+
+  build-docker-x86:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config: [Release]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: recursive
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/386
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache-x86
+          key: ${{ runner.os }}-buildx-x86-${{ hashFiles('script/Dockerfile.x86', 'vcpkg.json') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-x86-
+
+      - name: Build Docker image for x86
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./script/Dockerfile.x86
+          platforms: linux/386
+          push: false
+          load: true
+          tags: spaghettikart-x86:latest
+          cache-from: type=local,src=/tmp/.buildx-cache-x86
+          cache-to: type=local,dest=/tmp/.buildx-cache-x86-new,mode=max
+
+      - name: Build project in Docker (x86)
+        run: |
+          docker run --rm --platform linux/386 \
+            -v "${{ github.workspace }}:/project" \
+            spaghettikart-x86:latest \
+            bash -c "
+              cmake -B build-x86 -G Ninja \
+                -DCMAKE_BUILD_TYPE=${{ matrix.config }} && \
+              cmake --build build-x86 --parallel
+            "
+
+      - name: Fix permissions
+        run: sudo chown -R $(id -u):$(id -g) build-x86
+
+      - name: Create Package
+        run: |
+          mkdir -p spaghetti-x86-${{ matrix.config }}
+          mv build-x86/Spaghettify spaghetti-x86-${{ matrix.config }}/
+
+      - name: Publish packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: spaghetti-linux-x86-${{ matrix.config }}
+          path: spaghetti-x86-${{ matrix.config }}
+          retention-days: 7
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache-x86
+          mv /tmp/.buildx-cache-x86-new /tmp/.buildx-cache-x86 || true
