@@ -84,8 +84,13 @@ include(cmake/lus-cvars.cmake)
 
 if (WIN32)
   include(cmake/automate-vcpkg.cmake)
-  set(VCPKG_TRIPLET x64-windows-static)
-  set(VCPKG_TARGET_TRIPLET x64-windows-static)
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(VCPKG_TRIPLET x64-windows-static)
+    set(VCPKG_TARGET_TRIPLET x64-windows-static)
+  else()
+    set(VCPKG_TRIPLET x86-windows-static)
+    set(VCPKG_TARGET_TRIPLET x86-windows-static)
+  endif()
   vcpkg_bootstrap()
   vcpkg_install_packages()
 
@@ -189,6 +194,7 @@ set(SKIP_XCODE_VERSION_CHECK ON)
 # TODO: Sorry i broke this
 set(GFX_DEBUG_DISASSEMBLER OFF)
 
+if(NOT MSVC)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 check_c_compiler_flag("-Wno-error=int-conversion" HAS_WNO_ERROR_INT_CONVERSION)
@@ -202,6 +208,7 @@ endif()
 
 if(HAS_WNO_ERROR_CHANGES_MEANING)
   add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=changes-meaning>")
+endif()
 endif()
 
 # Add compile definitions for the target

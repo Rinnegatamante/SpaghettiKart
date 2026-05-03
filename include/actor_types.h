@@ -166,7 +166,15 @@ struct RailroadCrossing {
     /* 0x02 */ s16 flags;
     /* 0x04 */ s16 someTimer;
     /* 0x06 */ s16 crossingId; // unused now
-    /* 0x08 */ void* crossingTrigger; // Crossing Trigger Class
+    union {
+        struct {
+            /* 0x08 */ void* crossingTrigger; // Crossing Trigger Class
+        };
+        struct { // original field in actors
+            /* 0x08 */ f32 unk_08;
+            /* 0x0C */ f32 boundingBoxSize;
+        };
+    };
     /* 0x10 */ Vec3s rot;
     /* 0x16 */ s16 unk_16;
     /* 0x18 */ Vec3f pos;

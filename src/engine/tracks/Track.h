@@ -79,7 +79,10 @@ bool IsTriangleWindingInverted();
  * This work is done in render_track_sections()
  */
 typedef struct {
-    uint64_t crc;
+    union {
+        uint64_t crc;
+        void* model;
+    };
     u8 surfaceType; // Determines what kind of surface the player drives on (ex. dirt, asphalt, etc.)
     u8 sectionId;
     u16 clip; // enum in CustomTrack.h
