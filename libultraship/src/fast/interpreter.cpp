@@ -1951,46 +1951,52 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
 
     mRapi->ShaderGetInfo(prg, &numInputs, usedTextures);
 
-    struct GfxClipParameters clip_parameters = mRapi->GetClipParameters();
+    bool invertY = mRapi->GetClipParameters();
+	
+	float *buf_vbo_ptr = &mBufVbo[mBufVboLen];
+    float u_scale[2] = {0.03125f, 0.03125f};
+    float v_scale[2] = {0.03125f, 0.03125f};
+    float u_offset[2] = {0.0f, 0.0f};
+    float v_offset[2] = {0.0f, 0.0f};
+    float inv_tex_width[2] = {1.0f, 1.0f};
+    float inv_tex_height[2] = {1.0f, 1.0f};
+    
+    for (int t = 0; t < 2; t++) {
+        if (!usedTextures[t]) {
+            continue;
+        }
+
+        int shifts = mRdp->texture_tile[mRdp->first_tile_index + t].shifts;
+        int shiftt = mRdp->texture_tile[mRdp->first_tile_index + t].shiftt;
+        
+        inv_tex_width[t] = 1.0f / (float)tex_width[t];
+        inv_tex_height[t] = 1.0f / (float)tex_height[t];
+
+        if (shifts != 0) {
+            u_scale[t] *= (shifts <= 10) ? (1.0f / (1 << shifts)) : (float)(1 << (16 - shifts));
+        }
+        if (shiftt != 0) {
+            v_scale[t] *= (shiftt <= 10) ? (1.0f / (1 << shiftt)) : (float)(1 << (16 - shiftt));
+        }
+        
+        u_offset[t] = mRdp->texture_tile[mRdp->first_tile_index + t].uls * 0.25f;
+        v_offset[t] = mRdp->texture_tile[mRdp->first_tile_index + t].ult * 0.25f;
+    }
 
     for (int i = 0; i < 3; i++) {
         float z = v_arr[i]->z, w = v_arr[i]->w;
-        if (clip_parameters.z_is_from_0_to_1) {
-            z = (z + w) / 2.0f;
-        }
 
-        mBufVbo[mBufVboLen++] = v_arr[i]->x;
-        mBufVbo[mBufVboLen++] = clip_parameters.invertY ? -v_arr[i]->y : v_arr[i]->y;
-        mBufVbo[mBufVboLen++] = z;
-        mBufVbo[mBufVboLen++] = w;
+        *buf_vbo_ptr++ = v_arr[i]->x;
+        *buf_vbo_ptr++ = invertY ? -v_arr[i]->y : v_arr[i]->y;
+        *buf_vbo_ptr++ = z;
+        *buf_vbo_ptr++ = w;
 
         for (int t = 0; t < 2; t++) {
             if (!usedTextures[t]) {
                 continue;
             }
-            float u = v_arr[i]->u / 32.0f;
-            float v = v_arr[i]->v / 32.0f;
-
-            uint32_t uv_tile = effective_tile[t];
-            int shifts = mRdp->texture_tile[uv_tile].shifts;
-            int shiftt = mRdp->texture_tile[uv_tile].shiftt;
-            if (shifts != 0) {
-                if (shifts <= 10) {
-                    u /= 1 << shifts;
-                } else {
-                    u *= 1 << (16 - shifts);
-                }
-            }
-            if (shiftt != 0) {
-                if (shiftt <= 10) {
-                    v /= 1 << shiftt;
-                } else {
-                    v *= 1 << (16 - shiftt);
-                }
-            }
-
-            u -= mRdp->texture_tile[uv_tile].uls / 4.0f;
-            v -= mRdp->texture_tile[uv_tile].ult / 4.0f;
+            float u = (v_arr[i]->u * u_scale[t]) - u_offset[t];
+            float v = (v_arr[i]->v * v_scale[t]) - v_offset[t];
 
             if ((mRdp->other_mode_h & (3U << G_MDSFT_TEXTFILT)) != G_TF_POINT) {
                 // Linear filter adds 0.5f to the coordinates
@@ -2000,41 +2006,41 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
                 }
             }
 
-            mBufVbo[mBufVboLen++] = u / tex_width[t];
-            mBufVbo[mBufVboLen++] = v / tex_height[t];
+            *buf_vbo_ptr++ = u * inv_tex_width[t];
+            *buf_vbo_ptr++ = v * inv_tex_height[t];
 
             bool clampS = tm & (1 << 2 * t);
             bool clampT = tm & (1 << 2 * t + 1);
 
             if (clampS) {
-                mBufVbo[mBufVboLen++] = (tex_width2[t] - 0.5f) / tex_width[t];
+                *buf_vbo_ptr++ = (tex_width2[t] - 0.5f) * inv_tex_width[t];
             }
 
             if (clampT) {
-                mBufVbo[mBufVboLen++] = (tex_height2[t] - 0.5f) / tex_height[t];
+                *buf_vbo_ptr++ = (tex_height2[t] - 0.5f) * inv_tex_height[t];
             }
         }
 
         if (use_fog) {
             if (use_blend_color) {
                 // Shroud/blend mode: blend toward blend_color using fog alpha as factor
-                mBufVbo[mBufVboLen++] = mRdp->blend_color.r / 255.0f;
-                mBufVbo[mBufVboLen++] = mRdp->blend_color.g / 255.0f;
-                mBufVbo[mBufVboLen++] = mRdp->blend_color.b / 255.0f;
-                mBufVbo[mBufVboLen++] = mRdp->fog_color.a / 255.0f;
+                *buf_vbo_ptr++ = mRdp->blend_color.r * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = mRdp->blend_color.g * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = mRdp->blend_color.b * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = mRdp->fog_color.a * (1.0f / 255.0f);
             } else {
-                mBufVbo[mBufVboLen++] = mRdp->fog_color.r / 255.0f;
-                mBufVbo[mBufVboLen++] = mRdp->fog_color.g / 255.0f;
-                mBufVbo[mBufVboLen++] = mRdp->fog_color.b / 255.0f;
-                mBufVbo[mBufVboLen++] = v_arr[i]->color.a / 255.0f; // fog factor (not alpha)
+                *buf_vbo_ptr++ = mRdp->fog_color.r * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = mRdp->fog_color.g * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = mRdp->fog_color.b * (1.0f / 255.0f);
+                *buf_vbo_ptr++ = v_arr[i]->color.a * (1.0f / 255.0f); // fog factor (not alpha)
             }
         }
 
         if (use_grayscale) {
-            mBufVbo[mBufVboLen++] = mRdp->grayscale_color.r / 255.0f;
-            mBufVbo[mBufVboLen++] = mRdp->grayscale_color.g / 255.0f;
-            mBufVbo[mBufVboLen++] = mRdp->grayscale_color.b / 255.0f;
-            mBufVbo[mBufVboLen++] = mRdp->grayscale_color.a / 255.0f; // lerp interpolation factor (not alpha)
+            *buf_vbo_ptr++ = mRdp->grayscale_color.r * (1.0f / 255.0f);
+            *buf_vbo_ptr++ = mRdp->grayscale_color.g * (1.0f / 255.0f);
+            *buf_vbo_ptr++ = mRdp->grayscale_color.b * (1.0f / 255.0f);
+            *buf_vbo_ptr++ = mRdp->grayscale_color.a * (1.0f / 255.0f); // lerp interpolation factor (not alpha)
         }
 
         for (int j = 0; j < numInputs; j++) {
@@ -2095,16 +2101,16 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
                         break;
                 }
                 if (k == 0) {
-                    mBufVbo[mBufVboLen++] = color->r / 255.0f;
-                    mBufVbo[mBufVboLen++] = color->g / 255.0f;
-                    mBufVbo[mBufVboLen++] = color->b / 255.0f;
+                    *buf_vbo_ptr++ = color->r * (1.0f / 255.0f);
+                    *buf_vbo_ptr++ = color->g * (1.0f / 255.0f);
+                    *buf_vbo_ptr++ = color->b * (1.0f / 255.0f);
                 } else {
                     if (use_fog && !use_blend_color && color == &v_arr[i]->color) {
                         // Shade alpha is 100% for standard fog, blend color mode preserves
                         // it since fog alpha is the blend factor
-                        mBufVbo[mBufVboLen++] = 1.0f;
+                        *buf_vbo_ptr++ = 1.0f;
                     } else {
-                        mBufVbo[mBufVboLen++] = color->a / 255.0f;
+                        *buf_vbo_ptr++ = color->a  * (1.0f / 255.0f);
                     }
                 }
             }
@@ -2116,7 +2122,8 @@ void Interpreter::GfxSpTri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx
         // mBufVbo[mBufVboLen++] = color->b / 255.0f;
         // mBufVbo[mBufVboLen++] = color->a / 255.0f;
     }
-
+	
+    mBufVboLen = buf_vbo_ptr - mBufVbo;
 #ifdef __vita__
     mBufVboNumTris++;
 #else
@@ -2140,8 +2147,8 @@ void Interpreter::GfxSpExtraGeometryMode(uint32_t clear, uint32_t set) {
 void Interpreter::AdjustVIewportOrScissor(XYWidthHeight* area) {
     if (!mFbActive) {
         // Adjust the y origin based on the y-inversion for the active framebuffer
-        GfxClipParameters clipParameters = mRapi->GetClipParameters();
-        if (clipParameters.invertY) {
+        bool invertY = mRapi->GetClipParameters();
+        if (invertY) {
             area->y -= area->height;
         } else {
             area->y = mNativeDimensions.height - area->y;

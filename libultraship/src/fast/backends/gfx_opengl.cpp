@@ -42,8 +42,8 @@ const char* GfxRenderingAPIOGL::GetName() {
     return "OpenGL";
 }
 
-GfxClipParameters GfxRenderingAPIOGL::GetClipParameters() {
-    return { false, mFrameBuffers[mCurrentFrameBuffer].invertY };
+bool GfxRenderingAPIOGL::GetClipParameters() {
+    return mFrameBuffers[mCurrentFrameBuffer].invertY;
 }
 
 static void VertexArraySetAttribs(ShaderProgram* prg) {
