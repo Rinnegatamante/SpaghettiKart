@@ -77,6 +77,39 @@ std::shared_ptr<IResource> ResourceManager::LoadResourceProcessFast(const char *
     return resource;
 }
 
+std::shared_ptr<IResource> ResourceManager::LoadAltResourceProcess(const std::string& filePath, bool loadExact,
+                                                                std::shared_ptr<ResourceInitData> initData, uint64_t hash) {
+	// While waiting in the queue, another thread could have loaded the resource.
+    // In a last attempt to avoid doing work that will be discarded, let's check if the cached version exists.
+    auto cachedResource = CheckCache(hash, loadExact);
+    if (cachedResource != nullptr) {
+        return cachedResource;
+    }
+
+    // Get the file from the OTR
+    auto file = LoadFileProcess(filePath);
+    if (file == nullptr) {
+        SPDLOG_TRACE("Failed to load resource file at path {}", filePath);
+        return nullptr;
+    }
+
+    // Transform the raw data into a resource
+    auto resource = GetResourceLoader()->LoadResource(filePath, file, initData);
+
+    // Set the cache to the loaded resource
+    if (resource != nullptr) {
+        mResourceCache[hash] = resource;
+    }
+
+    if (resource != nullptr) {
+        SPDLOG_TRACE("Loaded Resource {} on ResourceManager", filePath);
+    } else {
+        SPDLOG_TRACE("Resource load FAILED {} on ResourceManager", filePath);
+    }
+
+    return resource;																
+}
+
 std::shared_ptr<IResource> ResourceManager::LoadResourceProcess(const std::string& filePath, bool loadExact,
                                                                 std::shared_ptr<ResourceInitData> initData, uint64_t hash) {
     // Check for and remove the OTR signature
@@ -94,7 +127,7 @@ std::shared_ptr<IResource> ResourceManager::LoadResourceProcess(const std::strin
     // asset.
 	if (!loadExact && mAltAssetsEnabled && !filePath.starts_with(IResource::gAltAssetPrefix)) {
 		const auto altPath = IResource::gAltAssetPrefix + filePath;
-		const auto altResource = LoadResourceProcess(altPath, loadExact, initData, hash);
+		const auto altResource = LoadAltResourceProcess(altPath, loadExact, initData, hash);
 		if (altResource != nullptr) {
             return altResource;
 		}
