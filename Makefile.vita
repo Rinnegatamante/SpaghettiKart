@@ -43,7 +43,7 @@ SOURCES := $(LUS_SOURCES) $(TORCH_SOURCES) $(GAME_SOURCES)
 
 INCLUDES := $(LUS_INCLUDES) $(TORCH_INCLUDES) $(GAME_INCLUDES)
 
-LIBS = -lstorm -lgfxd -lzip -lbzip2 -lzstd -lz -lyaml-cpp -llzma -lssl -lcrypto -lstdc++ -lpng \
+LIBS = -lzip -lbz2 -lzstd -lz -lyaml-cpp -llzma -lssl -lcrypto -lstdc++ -lpng \
 	-Wl,--whole-archive -lpthread -Wl,--no-whole-archive -ltinyxml2 -lopenal -lSDL2 -lvorbisfile -lvorbis -logg -lvitaGL \
 	-lvitashark -lSceShaccCgExt -ltaihen_stub -lmathneon -lSceAudioIn_stub \
 	-lSceIme_stub -lSceKernelDmacMgr_stub -lSceGxm_stub -lSceDisplay_stub -lSceTouch_stub -lSceHid_stub -lSceCtrl_stub -lSceNet_stub \
@@ -141,7 +141,10 @@ CFLAGS = -g -Wl,-q,--allow-multiple-definition -O3 -ffast-math -fno-short-enums 
 	-DCVAR_ALLOW_BACKGROUND_INPUTS=\"gAllowBackgroundInputs\" \
 	-DCVAR_SCRIPT_SAFE_LEVEL=\"gScriptSafeLevel\"
 
-CXXFLAGS = $(CFLAGS) -fexceptions -std=gnu++20 -fpermissive
+# Match the upstream C11/legacy pointer policy without hiding its warnings.
+C_ONLY_FLAGS := -std=gnu11 -Wno-error=int-conversion -Wno-error=incompatible-pointer-types
+CFLAGS += $(C_ONLY_FLAGS)
+CXXFLAGS = $(filter-out $(C_ONLY_FLAGS),$(CFLAGS)) -fexceptions -std=gnu++20 -fpermissive
 ASFLAGS  = $(CFLAGS)
 
 all: spaghetti.vpk

@@ -19,6 +19,9 @@
 #include "engine/editor/Editor.h"
 
 #include <stdio.h>
+#ifdef __vita__
+#include <malloc.h>
+#endif
 
 #include "port/Game.h"
 
