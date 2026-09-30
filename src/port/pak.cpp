@@ -1,6 +1,9 @@
 #include <filesystem>
 #include <fstream>
-#if __has_include(<fmt/format.h>)
+#if defined(__vita__)
+#include <spdlog/fmt/fmt.h>
+#define fmt(...) fmt::format(__VA_ARGS__)
+#elif __has_include(<fmt/format.h>)
 #include <fmt/format.h>
 #define fmt(...) fmt::format(__VA_ARGS__)
 #else
